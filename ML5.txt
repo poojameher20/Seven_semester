@@ -1,0 +1,159 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings("ignore")
+
+#%%
+df = pd.read_csv('C:\\Users\\ADMIN\\Desktop\\BE Sem-7 _Submission\\ML\\sales_data_sample.csv',encoding='Latin-1')
+
+
+# %%
+print(df.head())
+
+#%%
+
+#information of the data
+df.info()
+
+
+
+#%% 
+
+#get the statistical info of the data
+
+print(df.describe())
+
+
+# In[6]:
+
+
+#check for null values
+print(df.isnull().sum())
+
+#%% 
+# HeatMap
+sns.heatmap(pd.crosstab(df['STATUS'],df['DEALSIZE']), annot=True, cmap="YlGnBu")
+# In[7]:
+#correlation matrix
+
+plt.figure(figsize=(12,6))
+sns.heatmap(df.corr(),annot=True)
+plt.show()
+
+
+# In[8]:
+    
+from sklearn.cluster import KMeans
+
+
+# In[9]:
+
+print(df.head(3))
+# ### K means Clustering
+
+# In[10]:
+
+X=df[["PRICEEACH","SALES"]]
+
+
+# In[11]:
+
+#elbow method 
+
+wcss=[]
+for i in range(1, 11):
+    km = KMeans(n_clusters=i)
+    km.fit(X)
+    wcss.append(km.inertia_)
+    
+plt.figure(figsize=(12,6))
+plt.plot(range(1,11),wcss)
+plt.plot(range(1,11),wcss,color="green",linewidth=2)
+plt.xlabel("K")
+plt.ylabel("WCSS")
+plt.grid()
+plt.show()
+
+
+# In[12]:
+
+
+km_model=KMeans(n_clusters=3)
+km_model.fit(X)
+y_pred = km_model.predict(X)
+
+
+# In[13]:
+
+X['Target']=y_pred
+print(X.head())
+print(X.Target.value_counts())
+
+
+#%%
+#hue=X.Target,c=['red','orange','blue']
+plt.scatter(x=X[X.Target==0]['PRICEEACH'].values, y=X[X.Target==0]['SALES'].values,color='g')
+plt.scatter(x=X[X.Target==1]['PRICEEACH'].values, y=X[X.Target==1]['SALES'].values,color='r')
+plt.scatter(x=X[X.Target==2]['PRICEEACH'].values, y=X[X.Target==2]['SALES'].values,color='b')
+
+plt.title("Price of Each vs Total Sales")
+plt.show()
+
+
+
+# Hierarchical clustering
+
+# In[15]:
+
+
+#Find the optimal k value using dendrogram graph
+
+import scipy.cluster.hierarchy as shc 
+dendro = shc.dendrogram(shc.linkage(X, method="ward"))  
+plt.title("Dendrogram Plot")  
+plt.ylabel("Euclidean Distances")  
+plt.xlabel("Sales")  
+plt.show()  
+
+
+# In[16]:
+
+
+#train tge model
+
+from sklearn.cluster import AgglomerativeClustering  
+hc= AgglomerativeClustering(n_clusters=3, affinity='euclidean', linkage='ward')  
+y_pred= hc.fit_predict(X.drop("Target",axis='columns'))  
+
+# In[17]:
+
+
+X = X.drop("Target",axis='columns')
+
+
+# In[18]:
+
+
+X = X.values
+
+
+
+# In[19]:
+
+
+print(X)
+
+
+# In[20]:
+
+
+plt.figure(figsize=(10,7))
+plt.scatter(X[y_pred==0,0],X[y_pred==0,1],s=100,c="red",label="Cluster 1")
+plt.scatter(X[y_pred==1,0],X[y_pred==1,1],s=100,c="blue",label="Cluster 2")
+plt.scatter(X[y_pred==2,0],X[y_pred==2,1],s=100,c="green",label="Cluster 3")
+plt.title("Clusters of Sales")
+plt.xlabel("PRICEEACH")
+plt.xlabel("SALES")
+plt.show()
